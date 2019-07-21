@@ -1,0 +1,157 @@
+<script src="<?php echo base_url("public/assets/papaparse/papaparse.min.js") ?>"></script>
+<script>var base_url = "<?=base_url();?>";</script>
+<script>
+        var csvData = [];
+
+        function save(){
+            if(csvData.length > 0){
+                $.post(base_url+"api/Lecturer/saveImport", {"csvData":csvData},
+                    function (data, textStatus, jqXHR) {
+                        if(data.result.successData.length > 0){
+                            var html = "ข้อมูลที่บันทึกสำเร็จ <br>";
+                            $.each(data.result.successData, function (i, v) { 
+                                html += "username: "+v.username+" firstname: "+v.firstname+" lastname: "+v.lastname+"<br>";
+                            });
+                            $("#alertSuccess").show();
+                            $('html, body').animate({ scrollTop: $('#alertSuccess').offset().top }, 'slow');
+                            $("#spanSuccess").html(html);
+
+                        }
+
+                        if(data.result.duplicateData.length > 0){
+                            showMessage(200,data.message);
+                            var html = "มีข้อมูลซ้ำ <br>";
+                            $.each(data.result.duplicateData, function (i, v) { 
+                                html += "username: "+v.username+" firstname: "+v.firstname+" lastname: "+v.lastname+"<br>";
+                            });
+                            $("#alertDuplicate").show();
+                            $('html, body').animate({ scrollTop: $('#alertDuplicate').offset().top }, 'slow');
+                            $("#duplicate").html(html);
+                        }
+                        // else{
+                        //     showMessage(200,data.message,"<?=base_url('admin/import_lecturer')?>");
+                        // }
+                    }).fail(function(data) {
+                        showMessage(data.status,data.responseJSON.message)
+                    }
+                )
+            }
+        }
+
+        $(function(){
+
+            $("#form").submit(function (e) { 
+                e.preventDefault();
+                $("#response").attr("class", "");
+                $("#response").html("");
+                var fileType = ".csv";
+                var regex = new RegExp("([a-zA-Z0-9\s_\\.\-:])+("
+                        + fileType + ")$");
+                if (!regex.test($("#file").val().toLowerCase())) {
+                    $("#response").addClass("error");
+                    $("#response").addClass("display-block");
+                    $("#response").html(
+                            "ชนิดไฟล์ไม่ถูกต้อง : ไฟล์ <b>" + fileType
+                                    + "</b>");
+                    clearTableAndData();
+                    return false;
+                }                
+                renderTable();
+            });
+
+            function renderTable(){
+                $('#file').parse({
+                    config: {
+                        delimiter: "auto",
+                        complete: displayHTMLTable,
+                    }
+                });
+            }
+
+            $('#import-form').on('submit',function(e){
+                e.preventDefault();
+                var $btn = $(this).find('button[type="submit"]');
+                var formdata = new FormData(this);
+                $.ajax({
+                    url: base_url+'admin/import_lecturer/saveimport',
+                    type: 'POST',
+                    dataType: 'JSON',
+                    data:formdata,
+                    cache:false,
+                    contentType: false,
+                    processData: false,
+                    beforeSend:function(){
+                        $btn.button('loading');
+                    },
+                    success:function(response){
+                        $('.form-group.has-error').removeClass('has-error').find('span.text-danger').remove();
+                        switch(response.status){
+                            case 'form-incomplete':
+                                $.each(response.errors, function(key,val){
+                                    if(val.error!=''){
+                                        $(val.field).closest('.form-group').addClass('has-error').append(val.error);
+                                    }
+                                })
+                            break;
+                            case 'success':
+                                window.location.reload(true);
+                            break;
+                            case 'error':
+                                console.log(response.message);
+                            break;
+                        }
+                    },
+                    error: function(jqXHR,textStatus,error){
+                        console.log('Unable to send request!');
+                    }
+                }).always(function(){
+                    $btn.button('reset');
+                });
+            })
+            
+            
+            function displayHTMLTable(results){
+                console.log(results);
+                var header = "no,name_title,firstname,lastname,email,username,password,course_id";
+                
+                var isValid = header == results.data[0];
+                if(isValid){
+                    $("#parsed_csv_list").html("");
+                    var table = "<table class='table table-striped'>";
+                    var data = results.data;
+                    
+                    for(i=0;i<data.length-1;i++){
+                        table+= "<tr>";
+                        var row = data[i];
+                        var cells = row.join(",").split(",");
+                        if(i > 0){
+                            csvData.push(cells);
+                        }
+                        for(j=0;j<cells.length;j++){
+                            table+= "<td>";
+                            table+= cells[j];
+                            table+= "</td>";
+                        }
+                        table+= "</tr>";
+                    }
+                    table+= "</table>";
+
+                    table += "<div>"
+                            +"<button type='button' class='btn btn-success' onclick='save()'>บันทึก</button>"
+                            +"</div>";
+                    $("#parsed_csv_list").html(table);
+                }else{
+                    $("#response").addClass("error");
+                    $("#response").addClass("display-block");
+                    $("#response").html("รูปแบบไฟล์ไม่ถูกต้อง");
+                    clearTableAndData();
+                }
+            }
+
+            function clearTableAndData(){
+                csvData = [];
+                $("#parsed_csv_list").html("");
+            }
+            
+        })
+    </script>
