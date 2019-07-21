@@ -1,0 +1,71 @@
+<div class="page-wrapper">
+    <div class="card card-outline">
+        <div class="container-fluid">
+            <form id="subject_teach-form">
+                <div class="card-header">
+                    <h4>เพิ่มรายวิชาของปีการศึกษา</h4>
+                </div><br>
+                <div class="container">
+                    <div class="row">
+                        <div class="col-7"> เลือกวิชา:
+                           <select  name="subject_id" id="subject_id" class="form-control">
+                                <option value="">กรุณาเลือกวิชา</option>
+                                <?php foreach($subjects as $subject):?>
+                                <option value="<?= $subject['subject_id']?>" ><?= $subject['subject_code']?> <?= $subject['subject_name']?></option>
+                                <?php endforeach;?>
+                           </select>
+                        </div>
+                        
+                        <div class="container">
+                            <div class="row">
+                            <div class="col-3">
+                            คะแนนการนำเสนอ:
+                                <input type="number"   name="percent_present" id="sum1"  class="form-control percent" placeholder="กรุณากรอกคะแนนนำเสนอ" onkeyup="sum();">
+                            </div> 
+                            <div class="col-3">
+                            คะแนนรายงาน:
+                                <input type="number" name="percent_report" id="sum2" class="form-control percent" placeholder="กรุณากรอกคะแนนรายงาน" onkeyup="sum();">
+                            </div> 
+                            <div class="col-3">
+                            คะแนนจากแหล่งฝึก:
+                                <input type="number" name="percent_trainer" id="sum3" class="form-control percent" placeholder="กรุณากรอกคะแนนแหล่งฝึก" onkeyup="sum();">
+                            </div> 
+                            <div class="col-3">
+                            คะแนนรวม (100 คะแนน)
+                            <input type="text" id="textthree" class="form-control"  name="sumout" placeholder="" readonly>
+                        </div>    
+                        </div>
+                    </div>
+                        
+                    <br>
+                    <div class="card" style="width: -webkit-fill-available;">
+                        <h5 class="card-title">เลือกอาจารย์</h5>
+                        <div class="row">
+                            <?php foreach ($lecturers as $lecturer) :?>
+                                <div class="col-3"><input type="checkbox" name="lecturer[]" value="<?php echo $lecturer['lecturer_id'];?>">  <?php echo $lecturer['name_title'];?> <?php echo $lecturer['firstname'];?> <?php echo $lecturer['lastname'];?></div>                                       
+                            <?php endforeach;?>
+                        </div>
+                    </div>
+                    <br>
+                </div>
+                <div class="row">
+                    <button type="button" id="save" class="btn btn-success">บันทึก</button>
+                    </button><a href="<?php echo base_url('admin/subject_teach?course_id='.$course_id);?>" ​​​​​><button type="button" class="btn btn-cancle">ยกเลิก</button></a>       
+                </div>
+            </form>
+        </div>
+        
+    </div> 
+</div>
+
+<script>
+    function sum() {
+        var txtFirstNumberValue = document.getElementById('sum1').value;
+        var txtSecondNumberValue = document.getElementById('sum2').value;
+        var txtThirdNumberValue = document.getElementById('sum3').value;
+        var result = parseInt(txtFirstNumberValue) + parseInt(txtSecondNumberValue) + parseInt(txtThirdNumberValue);
+        if (!isNaN(result)) {
+            document.getElementById('textthree').value = result;
+        }
+    }
+</script>
